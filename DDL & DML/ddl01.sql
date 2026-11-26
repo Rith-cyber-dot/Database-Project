@@ -157,7 +157,7 @@ CREATE TABLE admissions (
     CONSTRAINT fk_admissions_room
         FOREIGN KEY (room_id) REFERENCES rooms (room_id)
         ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+);
 
 CREATE TABLE billings (
     bill_id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
