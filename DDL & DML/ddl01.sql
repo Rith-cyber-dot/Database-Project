@@ -2,8 +2,8 @@
 -- HOSPITAL MANAGEMENT SYSTEM - MYSQL DDL
 -- ==========================================
 
-CREATE DATABASE IF NOT EXISTS hospital_management;
-USE hospital_management;
+CREATE DATABASE hospital_management_system;
+USE hospital_management_system;
 
 CREATE TABLE departments (
 	-- bigger than INT and unsigned is for non-negative id(start from 0)
