@@ -6,8 +6,8 @@ CREATE DATABASE hospital_management_system;
 USE hospital_management_system;
 
 CREATE TABLE departments (
-	-- bigger than INT and unsigned is for non-negative id(start from 0)
-    dept_id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	-- unsigned is for non-negative id(start from 1)
+    dept_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
     dept_name       VARCHAR(120) NOT NULL,
     dept_location   VARCHAR(150) NULL,
     -- varchar beccause for INT it will delete 0 at the front automatically
@@ -23,8 +23,8 @@ CREATE TABLE departments (
 );
 
 CREATE TABLE doctors (
-    doctor_id       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    dept_id         BIGINT UNSIGNED NOT NULL,
+    doctor_id       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    dept_id         INT UNSIGNED NOT NULL,
     doctor_name     VARCHAR(120) NOT NULL,
     specialization  VARCHAR(100) NOT NULL,
     phone_number    VARCHAR(30) NULL,
@@ -40,7 +40,7 @@ CREATE TABLE doctors (
 );
 
 CREATE TABLE patients (
-    patient_id      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    patient_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
     patient_name    VARCHAR(120) NOT NULL,
     gender          ENUM('Female', 'Male', 'Other') NOT NULL,
     date_of_birth   DATE NOT NULL,
@@ -54,31 +54,40 @@ CREATE TABLE patients (
 );
 
 CREATE TABLE appointments (
-    appointment_id  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    patient_id      BIGINT UNSIGNED NOT NULL,
-    doctor_id       BIGINT UNSIGNED NOT NULL,
-    appoint_date    DATE NOT NULL,
-    appoint_time    TIME NOT NULL,
+    appointment_id        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    patient_id            INT UNSIGNED NOT NULL,
+    doctor_id             INT UNSIGNED NOT NULL,
+    appoint_date          DATE NOT NULL,
+    appoint_start_time    TIME NOT NULL,
+	appoint_end_time	  TIME NOT NULL,
     -- -- 'No-Show' tracks patients who missed their scheduled slot without cancelling in advance
-    status          ENUM('Scheduled', 'Completed', 'Cancelled', 'No-Show') NOT NULL DEFAULT 'Scheduled',
+    status          ENUM('Scheduled', 'CHECK-In', 'Completed', 'Cancelled', 'No-Show') NOT NULL DEFAULT 'Scheduled',
+	slot_reserved   TINYINT GENERATED ALWAYS AS (
+        CASE WHEN status IN ('Cancelled', 'No-Show') THEN NULL ELSE 1 END
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (appointment_id),
-    -- prevents one patient from being double-booked at the exact same date and time
-    CONSTRAINT uq_doctor_timeslot UNIQUE (doctor_id, appoint_date, appoint_time),
+    CONSTRAINT chk_appointments_time CHECK (end_time > start_time),
+    -- Prevents double-booking the same doctor at the exact same start slot
+    CONSTRAINT uq_doctor_timeslot UNIQUE (doctor_id, appoint_date, start_time, slot_reserved),
+    -- Prevents double-booking the same patient at the exact same start slot
+    CONSTRAINT uq_patient_timeslot UNIQUE (patient_id, appoint_date, start_time, slot_reserved),
     CONSTRAINT fk_appointments_patient
         FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_appointments_doctor
         FOREIGN KEY (doctor_id) REFERENCES doctors (doctor_id)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_appointments_created_by
+        FOREIGN KEY (created_by) REFERENCES staff (staff_id)
+        ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE diagnoses (
-    diagnosis_id    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    appointment_id  BIGINT UNSIGNED NOT NULL,
-    diagnosis       VARCHAR(255) NOT NULL,
+    diagnosis_id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    appointment_id  INT UNSIGNED NOT NULL,
+    diagnosis_name       VARCHAR(255) NOT NULL,
     notes           TEXT NULL,
-    diagnosis_date  DATE NOT NULL DEFAULT (CURRENT_DATE),
+    diagnosis_at    DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (diagnosis_id),
     CONSTRAINT uq_diagnoses_appointment UNIQUE (appointment_id),
     CONSTRAINT fk_diagnoses_appointment
@@ -90,6 +99,7 @@ CREATE TABLE medicines (
     medicine_id     BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     name            VARCHAR(150) NOT NULL,
     unit_price      DECIMAL(10, 2) NOT NULL,
+	dosage_form     VARCHAR(50) NOT NULL,
     stock_qty       INT UNSIGNED NOT NULL DEFAULT 0,
     updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (medicine_id),
@@ -98,9 +108,9 @@ CREATE TABLE medicines (
 ) ;
 
 CREATE TABLE prescriptions (
-    prescription_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    diagnosis_id    BIGINT UNSIGNED NOT NULL,
-    prescribed_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    prescription_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    diagnosis_id    INT UNSIGNED NOT NULL,
+    prescribed_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instructions    TEXT NULL,
     PRIMARY KEY (prescription_id),
     CONSTRAINT fk_prescriptions_diagnosis
@@ -109,9 +119,9 @@ CREATE TABLE prescriptions (
 );
 
 CREATE TABLE prescription_items (
-    prescription_item_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    prescription_id      BIGINT UNSIGNED NOT NULL,
-    medicine_id          BIGINT UNSIGNED NOT NULL,
+    prescription_item_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    prescription_id      INT UNSIGNED NOT NULL,
+    medicine_id          INT UNSIGNED NOT NULL,
     dose                 VARCHAR(100) NOT NULL,
     duration             VARCHAR(100) NOT NULL,
     quantity             INT UNSIGNED NOT NULL,
@@ -172,12 +182,3 @@ CREATE TABLE billings (
         FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ;
-
--- Helpful indexes for lookups and joins
--- Speeds up lookups, joins, and foreign-key checks across appointments, prescriptions, admissions, and billings
-CREATE INDEX idx_appointments_patient_id ON appointments (patient_id); -- Fast lookup of a patient's appointments and patient-appointment joins
-CREATE INDEX idx_appointments_doctor_date ON appointments (doctor_id, appoint_date); -- Fast daily schedule lookups for a doctor on a given date
-CREATE INDEX idx_prescriptions_diagnosis_id ON prescriptions (diagnosis_id); -- Fast lookup of prescriptions by diagnosis and FK checks
-CREATE INDEX idx_admissions_patient_id ON admissions (patient_id); -- Fast lookup of a patient's admission history and joins
-CREATE INDEX idx_admissions_room_id ON admissions (room_id); -- Fast lookup of room stay history and FK checks
-CREATE INDEX idx_billings_patient_id ON billings (patient_id); -- Fast lookup of a patient's bills and patient-billing joins
