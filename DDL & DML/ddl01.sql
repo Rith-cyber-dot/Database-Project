@@ -77,9 +77,6 @@ CREATE TABLE appointments (
     CONSTRAINT fk_appointments_doctor
         FOREIGN KEY (doctor_id) REFERENCES doctors (doctor_id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_appointments_created_by
-        FOREIGN KEY (created_by) REFERENCES staff (staff_id)
-        ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE diagnoses (
