@@ -63,7 +63,7 @@ CREATE TABLE appointments (
     -- -- 'No-Show' tracks patients who missed their scheduled slot without cancelling in advance
     status          ENUM('Scheduled', 'CHECK-In', 'Completed', 'Cancelled', 'No-Show') NOT NULL DEFAULT 'Scheduled',
 	slot_reserved   TINYINT GENERATED ALWAYS AS (
-        CASE WHEN status IN ('Cancelled', 'No-Show') THEN NULL ELSE 1 END
+        CASE WHEN status IN ('Cancelled', 'No-Show') THEN NULL ELSE 1 END),
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (appointment_id),
     CONSTRAINT chk_appointments_time CHECK (end_time > start_time),
