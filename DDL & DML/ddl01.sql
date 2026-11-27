@@ -139,7 +139,7 @@ CREATE TABLE prescription_items (
 );
 
 CREATE TABLE rooms (
-    room_id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    room_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
     room_number     VARCHAR(30) NOT NULL,
     room_type       VARCHAR(50) NOT NULL,
     -- Total number of beds the room can hold
@@ -153,9 +153,9 @@ CREATE TABLE rooms (
 );
 
 CREATE TABLE admissions (
-    admission_id    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    patient_id      BIGINT UNSIGNED NOT NULL,
-    room_id         BIGINT UNSIGNED NOT NULL,
+    admission_id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    patient_id      INT UNSIGNED NOT NULL,
+    room_id         INT UNSIGNED NOT NULL,
     admit_date      DATE NOT NULL DEFAULT (CURRENT_DATE),
     discharge_date  DATE NULL,
     PRIMARY KEY (admission_id),
@@ -170,8 +170,8 @@ CREATE TABLE admissions (
 );
 
 CREATE TABLE billings (
-    bill_id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    patient_id      BIGINT UNSIGNED NOT NULL,
+    bill_id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    patient_id      INT UNSIGNED NOT NULL,
     total_amount    DECIMAL(12, 2) NOT NULL,
     bill_date       DATE NOT NULL DEFAULT (CURRENT_DATE),
     -- -- 'Void' marks an erroneous or cancelled bill that should be ignored without deleting the audit record
