@@ -93,7 +93,7 @@ CREATE TABLE diagnoses (
 );
 
 CREATE TABLE medicines (
-    medicine_id     BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    medicine_id     INT UNSIGNED NOT NULL AUTO_INCREMENT,
     name            VARCHAR(150) NOT NULL,
     unit_price      DECIMAL(10, 2) NOT NULL,
 	dosage_form     VARCHAR(50) NOT NULL,
