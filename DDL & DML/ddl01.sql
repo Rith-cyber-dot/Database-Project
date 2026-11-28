@@ -27,7 +27,7 @@ CREATE TABLE doctors (
     dept_id         INT UNSIGNED NOT NULL,
     doctor_name     VARCHAR(120) NOT NULL,
     specialization  VARCHAR(100) NOT NULL,
-    phone_number    VARCHAR(30) NULL,
+    phone_number    VARCHAR(30) NOT NULL,
     email           VARCHAR(150) NULL,
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,6 +35,7 @@ CREATE TABLE doctors (
     CONSTRAINT uq_doctors_email UNIQUE (email),
     CONSTRAINT fk_doctors_department
         FOREIGN KEY (dept_id) REFERENCES departments (dept_id)
+    
         -- syncs dept_id updates; blocks deleting a department while doctors still reference it
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
@@ -75,9 +76,11 @@ CREATE TABLE appointments (
         UNIQUE (doctor_id,  appointment_date, appointment_start_time, slot_reserved),
     CONSTRAINT uq_patient_timeslot
         UNIQUE (patient_id, appointment_date, appointment_start_time, slot_reserved),
+    
     CONSTRAINT fk_appointments_patient
         FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
+    
     CONSTRAINT fk_appointments_doctor
         FOREIGN KEY (doctor_id) REFERENCES doctors (doctor_id)
         ON UPDATE CASCADE ON DELETE RESTRICT
@@ -171,12 +174,15 @@ CREATE TABLE admissions (
     CONSTRAINT uq_patient_open_admission UNIQUE (patient_id, is_open),
     CONSTRAINT chk_discharge_after_admit
         CHECK (discharge_date IS NULL OR discharge_date >= admit_date),
+    
     CONSTRAINT fk_admissions_patient
         FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
+    
     CONSTRAINT fk_admissions_room
         FOREIGN KEY (room_id) REFERENCES rooms (room_id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
+    
     CONSTRAINT fk_admissions_doctor
         FOREIGN KEY (doctor_id) REFERENCES doctors (doctor_id)
         ON UPDATE CASCADE ON DELETE RESTRICT
