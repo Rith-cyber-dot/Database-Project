@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS hospital_management_system;
+CREATE DATABASE hospital_management_system;
 USE hospital_management_system;
 
 CREATE TABLE Department (
